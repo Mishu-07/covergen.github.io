@@ -216,16 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePreview(); 
             saveData();
 
-            const a4_width_px = 2480;
-            const a4_height_px = 3508;
-
+            // --- JPG RESOLUTION FIX ---
             html2canvas(elements.coverPage, {
-                scale: 1,
-                useCORS: true,
-                width: a4_width_px,
-                height: a4_height_px,
-                windowWidth: a4_width_px,
-                windowHeight: a4_height_px
+                scale: 3, // Increased scale for high resolution (approx. 300 DPI)
+                useCORS: true
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
