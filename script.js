@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pdf.setFont('times', 'bold');
             pdf.setFontSize(20);
             pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, 40, { align: 'center' });
-            const logoWidth = 40;
+            const logoWidth = 55;
             const logoX = (pageWidth - logoWidth) / 2;
             pdf.addImage(logoDataUrl, 'PNG', logoX, 55, logoWidth, logoWidth);
             pdf.setFont('times', 'normal');
@@ -185,4 +185,5 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.passwordInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handlePassword();
     });
+
 });
