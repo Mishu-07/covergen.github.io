@@ -138,9 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveData();
             
             const logoDataUrl = await getImageDataUrl('logo.png');
-            const img = new Image();
-            img.src = logoDataUrl;
-            await new Promise(resolve => img.onload = resolve);
             
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
@@ -160,42 +157,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 pdf.text(normalText, startX + boldWidth, y);
             };
 
+            // --- FONT SIZE & SPACING CHANGES ---
+
+            // Main Title (30px -> 22.5pt)
             pdf.setFont('times', 'bold');
-            pdf.setFontSize(30);
-            pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, 30, { align: 'center' });
+            pdf.setFontSize(22.5);
+            const titleY = 35;
+            pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, titleY, { align: 'center' });
             
-            // --- IMAGE SIZE CHANGE ---
-            const logoWidth = 60; // Increased from 50 to 60
-            const aspectRatio = img.naturalHeight / img.naturalWidth;
-            const logoHeight = logoWidth * aspectRatio;
-            const logoX = (pageWidth - logoWidth) / 2;
-            pdf.addImage(logoDataUrl, 'PNG', logoX, 40, logoWidth, logoHeight, undefined, 'FAST');
+            // Gap after title (equivalent to 30px line height)
+            const gap_mm = 10.5; // 30px is ~10.5mm
+            let currentY = titleY + gap_mm;
+
+            // Logo (2.76in x 3.34in -> 70.1mm x 84.8mm)
+            const logoWidth_mm = 70.1;
+            const logoHeight_mm = 84.8;
+            const logoX = (pageWidth - logoWidth_mm) / 2;
+            pdf.addImage(logoDataUrl, 'PNG', logoX, currentY, logoWidth_mm, logoHeight_mm, undefined, 'FAST');
             
-            pdf.setFontSize(18);
-            let y = 125; // Adjusted y-position to accommodate larger logo
-            const lineSpacing = 9;
-            const blockSpacing = 22;
+            currentY += logoHeight_mm + gap_mm; // Position cursor after logo and gap
 
-            addCenteredBoldNormalText('Submitted By: ', elements.studentNameInput.value, y); y += lineSpacing;
-            addCenteredBoldNormalText('ID: ', elements.studentIdInput.value, y); y += blockSpacing;
+            // Details Text (18px -> 13.5pt)
+            pdf.setFontSize(13.5);
+            const lineSpacing = 7;
+            const blockSpacing = 16;
 
-            addCenteredBoldNormalText('Experiment No: ', elements.expNoInput.value, y); y += blockSpacing;
+            addCenteredBoldNormalText('Submitted By: ', elements.studentNameInput.value, currentY); currentY += lineSpacing;
+            addCenteredBoldNormalText('ID: ', elements.studentIdInput.value, currentY); currentY += blockSpacing;
 
-            addCenteredBoldNormalText('Submitted To: ', elements.submittedToInput.value, y); y += lineSpacing;
-            addCenteredBoldNormalText('Course name: ', elements.courseNameInput.value, y); y += blockSpacing;
+            addCenteredBoldNormalText('Experiment No: ', elements.expNoInput.value, currentY); currentY += blockSpacing;
 
-            addCenteredBoldNormalText('Section: ', elements.sectionInput.value, y); y += lineSpacing;
-            addCenteredBoldNormalText('Semester: ', elements.semesterInput.value, y); y += blockSpacing;
+            addCenteredBoldNormalText('Submitted To: ', elements.submittedToInput.value, currentY); currentY += lineSpacing;
+            addCenteredBoldNormalText('Course name: ', elements.courseNameInput.value, currentY); currentY += blockSpacing;
 
-            addCenteredBoldNormalText('Date of Submission: ', elements.submissionDateOutput.textContent, y);
+            addCenteredBoldNormalText('Section: ', elements.sectionInput.value, currentY); currentY += lineSpacing;
+            addCenteredBoldNormalText('Semester: ', elements.semesterInput.value, currentY); currentY += blockSpacing;
 
+            addCenteredBoldNormalText('Date of Submission: ', elements.submissionDateOutput.textContent, currentY);
+
+            // Footer
             pdf.setFont('times', 'bold');
             const footerY = pageHeight - 40;
-            pdf.setFontSize(18);
+            pdf.setFontSize(13.5); // Department Name (18px)
             pdf.text("Department of Biochemistry and Biotechnology", pageWidth / 2, footerY, { align: 'center' });
             
-            pdf.setFontSize(20);
-            pdf.text("North South University", pageWidth / 2, footerY + 10, { align: 'center' });
+            pdf.setFontSize(15); // University Name (20px)
+            pdf.text("North South University", pageWidth / 2, footerY + 8, { align: 'center' });
             
             const courseName = elements.courseNameInput.value || defaultData.courseName;
             const expNo = elements.expNoInput.value || defaultData.expNo;
@@ -208,7 +215,18 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.generateJpgBtn.addEventListener('click', () => {
             updatePreview(); 
             saveData();
-            html2canvas(elements.coverPage, { scale: 3, useCORS: true }).then(canvas => {
+
+            const a4_width_px = 2480;
+            const a4_height_px = 3508;
+
+            html2canvas(elements.coverPage, {
+                scale: 1,
+                useCORS: true,
+                width: a4_width_px,
+                height: a4_height_px,
+                windowWidth: a4_width_px,
+                windowHeight: a4_height_px
+            }).then(canvas => {
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
                 
@@ -224,8 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Password Handling ---
     const handlePassword = () => {
-        // --- PASSWORD CHANGE ---
-        if (elements.passwordInput.value === 'sadi') { // Changed from 'sadia03'
+        if (elements.passwordInput.value === 'sadi') {
             elements.passwordModal.classList.add('modal-hidden');
             elements.mainContent.classList.remove('content-hidden');
             initializeApp();
