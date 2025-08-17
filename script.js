@@ -161,20 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             pdf.setFont('times', 'bold');
-            pdf.setFontSize(20);
+            pdf.setFontSize(30);
             pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, 30, { align: 'center' });
             
-            const logoWidth = 50;
+            // --- IMAGE SIZE CHANGE ---
+            const logoWidth = 60; // Increased from 50 to 60
             const aspectRatio = img.naturalHeight / img.naturalWidth;
             const logoHeight = logoWidth * aspectRatio;
             const logoX = (pageWidth - logoWidth) / 2;
             pdf.addImage(logoDataUrl, 'PNG', logoX, 40, logoWidth, logoHeight, undefined, 'FAST');
             
-            pdf.setFontSize(14);
-            // Increased the starting 'y' position to add space below the logo
-            let y = 115; 
-            const lineSpacing = 7;
-            const blockSpacing = 18;
+            pdf.setFontSize(18);
+            let y = 125; // Adjusted y-position to accommodate larger logo
+            const lineSpacing = 9;
+            const blockSpacing = 22;
 
             addCenteredBoldNormalText('Submitted By: ', elements.studentNameInput.value, y); y += lineSpacing;
             addCenteredBoldNormalText('ID: ', elements.studentIdInput.value, y); y += blockSpacing;
@@ -190,10 +190,12 @@ document.addEventListener('DOMContentLoaded', () => {
             addCenteredBoldNormalText('Date of Submission: ', elements.submissionDateOutput.textContent, y);
 
             pdf.setFont('times', 'bold');
-            pdf.setFontSize(14);
             const footerY = pageHeight - 40;
+            pdf.setFontSize(18);
             pdf.text("Department of Biochemistry and Biotechnology", pageWidth / 2, footerY, { align: 'center' });
-            pdf.text("North South University", pageWidth / 2, footerY + 8, { align: 'center' });
+            
+            pdf.setFontSize(20);
+            pdf.text("North South University", pageWidth / 2, footerY + 10, { align: 'center' });
             
             const courseName = elements.courseNameInput.value || defaultData.courseName;
             const expNo = elements.expNoInput.value || defaultData.expNo;
@@ -222,7 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Password Handling ---
     const handlePassword = () => {
-        if (elements.passwordInput.value === 'sadia03') {
+        // --- PASSWORD CHANGE ---
+        if (elements.passwordInput.value === 'sadi') { // Changed from 'sadia03'
             elements.passwordModal.classList.add('modal-hidden');
             elements.mainContent.classList.remove('content-hidden');
             initializeApp();
