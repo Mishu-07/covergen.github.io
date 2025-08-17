@@ -118,10 +118,9 @@ body {
     font-weight: bold; margin: 0; padding-top: 1cm;
 }
 .logo {
-    width: 2.76in; /* Set width from requirement */
-    height: 3.34in; /* Set height from requirement */
-    object-fit: contain; /* Prevents image distortion */
-    /* Gap before/after logo equivalent to 30px font line-height */
+    width: 2.76in;
+    height: 3.34in;
+    object-fit: contain;
     margin: 30px auto;
 }
 .details-block {
@@ -166,4 +165,11 @@ body {
         transform-origin: top center;
         margin: 20px auto;
     }
+}
+
+/* --- FIX FOR JPG CAPTURE --- */
+#cover-page.capture-mode {
+    transform: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
 }
