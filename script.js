@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         coverPage: document.getElementById('cover-page')
     };
 
+    // --- Default Data for Initial Load ---
     const defaultData = {
         courseCode: "CHE203L",
         studentName: "Sadia Islam",
@@ -43,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
         submissionDate: "2025-08-17"
     };
 
+    // --- Core Functions ---
+
+    // Updates the live preview panel based on form input
     const updatePreview = () => {
         const getVal = (el, def) => el.value || def;
         elements.courseCodeOutput.textContent = getVal(elements.courseCodeInput, defaultData.courseCode) + " REPORT";
@@ -53,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.courseNameOutput.textContent = getVal(elements.courseNameInput, defaultData.courseName);
         elements.sectionOutput.textContent = getVal(elements.sectionInput, defaultData.section);
         elements.semesterOutput.textContent = getVal(elements.semesterInput, defaultData.semester);
+        
         const dateValue = elements.submissionDateInput.value;
         if (dateValue) {
             const date = new Date(dateValue);
@@ -66,14 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // Function to convert an image to a Base64 data URL
+    // Converts an image URL to a Base64 data URL for embedding
     const getImageDataUrl = (url) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'Anonymous';
+            img.crossOrigin = 'Anonymous'; // Important for local development with a server
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                canvas.width = img.width; canvas.height = img.height;
+                canvas.width = img.width;
+                canvas.height = img.height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
                 resolve(canvas.toDataURL('image/png'));
@@ -83,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // Saves the current form data to localStorage
     const saveData = () => {
         const currentData = {
             courseCode: elements.courseCodeInput.value,
@@ -98,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('coverPageData', JSON.stringify(currentData));
     };
 
+    // Loads data from localStorage or uses defaults
     const loadData = () => {
         const savedData = localStorage.getItem('coverPageData');
         const data = savedData ? JSON.parse(savedData) : defaultData;
@@ -113,30 +121,47 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePreview();
     };
 
+    // --- Main Application Initialization ---
     const initializeApp = () => {
         window.jsPDF = window.jspdf.jsPDF;
         loadData();
+        
+        // Add event listeners to all inputs to update the preview in real-time
         const inputs = document.querySelectorAll('.form-body input');
         inputs.forEach(input => {
             input.addEventListener('keyup', updatePreview);
             input.addEventListener('change', updatePreview);
         });
 
+        // Event Listener for PDF Generation
         elements.generatePdfBtn.addEventListener('click', async () => {
             updatePreview(); 
             saveData();
             
-            // Convert the separate logo.png file to data for the PDF
+            // Convert the logo to a data URL and get its dimensions
             const logoDataUrl = await getImageDataUrl('logo.png');
+            const img = new Image();
+            img.src = logoDataUrl;
+            await new Promise(resolve => img.onload = resolve); // Wait for image to load
             
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
+
+            // Add Course Code Title
             pdf.setFont('times', 'bold');
             pdf.setFontSize(20);
             pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, 40, { align: 'center' });
-            const logoWidth = 55;
-            const logoX = (pageWidth - logoWidth) / 2;
-            pdf.addImage(logoDataUrl, 'PNG', logoX, 55, logoWidth, logoWidth);
+            
+            // --- IMAGE PROPORTION & COMPRESSION FIX ---
+            const logoWidth = 55; // Desired width of the logo in the PDF
+            const aspectRatio = img.naturalHeight / img.naturalWidth; // Calculate original aspect ratio
+            const logoHeight = logoWidth * aspectRatio; // Calculate proportional height
+            const logoX = (pageWidth - logoWidth) / 2; // Center the logo horizontally
+
+            // Add the logo with correct dimensions and compression
+            pdf.addImage(logoDataUrl, 'PNG', logoX, 55, logoWidth, logoHeight, undefined, 'FAST');
+            
+            // Add the rest of the text details
             pdf.setFont('times', 'normal');
             pdf.setFontSize(14);
             let y = 120;
@@ -150,26 +175,43 @@ document.addEventListener('DOMContentLoaded', () => {
             pdf.text(`Section: ${elements.sectionInput.value}`, pageWidth / 2, y, { align: 'center' }); y += lineSpacing;
             pdf.text(`Semester: ${elements.semesterInput.value}`, pageWidth / 2, y, { align: 'center' }); y += blockSpacing;
             pdf.text(`Date of Submission: ${elements.submissionDateOutput.textContent}`, pageWidth / 2, y, { align: 'center' });
+            
+            // Add Footer
             pdf.setFont('times', 'bold');
             pdf.setFontSize(14);
             pdf.text("Department of Biochemistry and Biotechnology", pageWidth / 2, 250, { align: 'center' });
             pdf.setFontSize(20);
             pdf.text("North South University", pageWidth / 2, 260, { align: 'center' });
-            pdf.save('report-cover-page.pdf');
+            
+            // --- DYNAMIC FILENAME ---
+            const courseName = elements.courseNameInput.value || defaultData.courseName;
+            const expNo = elements.expNoInput.value || defaultData.expNo;
+            const fileName = `Cover - ${courseName} - Lab ${expNo}`;
+            
+            // Save the PDF
+            pdf.save(`${fileName}.pdf`);
         });
 
+        // Event Listener for JPG Generation
         elements.generateJpgBtn.addEventListener('click', () => {
             updatePreview(); 
             saveData();
             html2canvas(elements.coverPage, { scale: 3, useCORS: true }).then(canvas => {
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.download = 'report-cover-page.jpg';
+                
+                // --- DYNAMIC FILENAME ---
+                const courseName = elements.courseNameInput.value || defaultData.courseName;
+                const expNo = elements.expNoInput.value || defaultData.expNo;
+                const fileName = `Cover - ${courseName} - Lab ${expNo}`;
+                
+                link.download = `${fileName}.jpg`;
                 link.click();
             });
         });
     };
 
+    // --- Password Handling ---
     const handlePassword = () => {
         if (elements.passwordInput.value === 'sadia03') {
             elements.passwordModal.classList.add('modal-hidden');
@@ -185,5 +227,4 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.passwordInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handlePassword();
     });
-
 });
