@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const getImageDataUrl = (url) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'Anonymous'; // Important for local development with a server
+            img.crossOrigin = 'Anonymous';
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = img.width;
@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.jsPDF = window.jspdf.jsPDF;
         loadData();
         
-        // Add event listeners to all inputs to update the preview in real-time
         const inputs = document.querySelectorAll('.form-body input');
         inputs.forEach(input => {
             input.addEventListener('keyup', updatePreview);
@@ -138,57 +137,68 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePreview(); 
             saveData();
             
-            // Convert the logo to a data URL and get its dimensions
             const logoDataUrl = await getImageDataUrl('logo.png');
             const img = new Image();
             img.src = logoDataUrl;
-            await new Promise(resolve => img.onload = resolve); // Wait for image to load
+            await new Promise(resolve => img.onload = resolve);
             
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
 
-            // Add Course Code Title
+            const addCenteredBoldNormalText = (boldText, normalText, y) => {
+                const fontSize = pdf.getFontSize();
+                pdf.setFont('times', 'bold');
+                const boldWidth = pdf.getStringUnitWidth(boldText) * fontSize / pdf.internal.scaleFactor;
+                pdf.setFont('times', 'normal');
+                const normalWidth = pdf.getStringUnitWidth(normalText) * fontSize / pdf.internal.scaleFactor;
+                const totalWidth = boldWidth + normalWidth;
+                const startX = (pageWidth / 2) - (totalWidth / 2);
+                pdf.setFont('times', 'bold');
+                pdf.text(boldText, startX, y);
+                pdf.setFont('times', 'normal');
+                pdf.text(normalText, startX + boldWidth, y);
+            };
+
             pdf.setFont('times', 'bold');
             pdf.setFontSize(20);
-            pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, 40, { align: 'center' });
+            pdf.text(elements.courseCodeOutput.textContent, pageWidth / 2, 30, { align: 'center' });
             
-            // --- IMAGE PROPORTION & COMPRESSION FIX ---
-            const logoWidth = 55; // Desired width of the logo in the PDF
-            const aspectRatio = img.naturalHeight / img.naturalWidth; // Calculate original aspect ratio
-            const logoHeight = logoWidth * aspectRatio; // Calculate proportional height
-            const logoX = (pageWidth - logoWidth) / 2; // Center the logo horizontally
-
-            // Add the logo with correct dimensions and compression
-            pdf.addImage(logoDataUrl, 'PNG', logoX, 55, logoWidth, logoHeight, undefined, 'FAST');
+            const logoWidth = 50;
+            const aspectRatio = img.naturalHeight / img.naturalWidth;
+            const logoHeight = logoWidth * aspectRatio;
+            const logoX = (pageWidth - logoWidth) / 2;
+            pdf.addImage(logoDataUrl, 'PNG', logoX, 40, logoWidth, logoHeight, undefined, 'FAST');
             
-            // Add the rest of the text details
-            pdf.setFont('times', 'normal');
             pdf.setFontSize(14);
-            let y = 120;
+            // Increased the starting 'y' position to add space below the logo
+            let y = 115; 
             const lineSpacing = 7;
-            const blockSpacing = 14;
-            pdf.text(`Submitted By: ${elements.studentNameInput.value}`, pageWidth / 2, y, { align: 'center' }); y += lineSpacing;
-            pdf.text(`ID: ${elements.studentIdInput.value}`, pageWidth / 2, y, { align: 'center' }); y += blockSpacing;
-            pdf.text(`Experiment No: ${elements.expNoInput.value}`, pageWidth / 2, y, { align: 'center' }); y += blockSpacing;
-            pdf.text(`Submitted To: ${elements.submittedToInput.value}`, pageWidth / 2, y, { align: 'center' }); y += lineSpacing;
-            pdf.text(`Course name: ${elements.courseNameInput.value}`, pageWidth / 2, y, { align: 'center' }); y += blockSpacing;
-            pdf.text(`Section: ${elements.sectionInput.value}`, pageWidth / 2, y, { align: 'center' }); y += lineSpacing;
-            pdf.text(`Semester: ${elements.semesterInput.value}`, pageWidth / 2, y, { align: 'center' }); y += blockSpacing;
-            pdf.text(`Date of Submission: ${elements.submissionDateOutput.textContent}`, pageWidth / 2, y, { align: 'center' });
-            
-            // Add Footer
+            const blockSpacing = 18;
+
+            addCenteredBoldNormalText('Submitted By: ', elements.studentNameInput.value, y); y += lineSpacing;
+            addCenteredBoldNormalText('ID: ', elements.studentIdInput.value, y); y += blockSpacing;
+
+            addCenteredBoldNormalText('Experiment No: ', elements.expNoInput.value, y); y += blockSpacing;
+
+            addCenteredBoldNormalText('Submitted To: ', elements.submittedToInput.value, y); y += lineSpacing;
+            addCenteredBoldNormalText('Course name: ', elements.courseNameInput.value, y); y += blockSpacing;
+
+            addCenteredBoldNormalText('Section: ', elements.sectionInput.value, y); y += lineSpacing;
+            addCenteredBoldNormalText('Semester: ', elements.semesterInput.value, y); y += blockSpacing;
+
+            addCenteredBoldNormalText('Date of Submission: ', elements.submissionDateOutput.textContent, y);
+
             pdf.setFont('times', 'bold');
             pdf.setFontSize(14);
-            pdf.text("Department of Biochemistry and Biotechnology", pageWidth / 2, 250, { align: 'center' });
-            pdf.setFontSize(20);
-            pdf.text("North South University", pageWidth / 2, 260, { align: 'center' });
+            const footerY = pageHeight - 40;
+            pdf.text("Department of Biochemistry and Biotechnology", pageWidth / 2, footerY, { align: 'center' });
+            pdf.text("North South University", pageWidth / 2, footerY + 8, { align: 'center' });
             
-            // --- DYNAMIC FILENAME ---
             const courseName = elements.courseNameInput.value || defaultData.courseName;
             const expNo = elements.expNoInput.value || defaultData.expNo;
             const fileName = `Cover - ${courseName} - Lab ${expNo}`;
             
-            // Save the PDF
             pdf.save(`${fileName}.pdf`);
         });
 
@@ -200,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
                 
-                // --- DYNAMIC FILENAME ---
                 const courseName = elements.courseNameInput.value || defaultData.courseName;
                 const expNo = elements.expNoInput.value || defaultData.expNo;
                 const fileName = `Cover - ${courseName} - Lab ${expNo}`;
