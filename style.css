@@ -32,15 +32,21 @@ body {
 }
 .modal-content h2 { margin-top: 0; color: var(--primary-color); }
 .modal-content p { color: #666; margin-bottom: 20px; }
-.password-wrapper { display: flex; gap: 10px; }
+.password-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: stretch; /* Ensures button and input are same height */
+}
 #password-input {
     flex-grow: 1; border: 1px solid var(--border-color);
     padding: 12px; border-radius: 8px; font-size: 16px;
+    min-width: 0; /* Prevents input from overflowing */
 }
 #password-submit {
     border: none; background-color: var(--primary-color); color: white;
     padding: 0 20px; border-radius: 8px; font-weight: 500; cursor: pointer;
     transition: background-color 0.2s;
+    flex-shrink: 0; /* Prevents button from shrinking */
 }
 #password-submit:hover { background-color: var(--primary-dark); }
 .modal-hidden { opacity: 0; pointer-events: none; }
@@ -107,22 +113,35 @@ body {
 }
 .content-body { flex-grow: 1; padding: 2cm; }
 #cover-page h2 { font-size: 20pt; font-weight: bold; margin: 0; padding-top: 1cm; }
-.logo { width: 150px; margin: 30px 0; } /* Adjusted margin */
-.details-block { margin-bottom: 25px; } /* Adjusted margin */
+.logo { width: 150px; margin: 30px 0; }
+.details-block { margin-bottom: 25px; }
 .details-block p { margin: 4px 0; line-height: 1.5; }
-.footer { padding: 2cm; padding-top: 0; font-size: 14pt; font-weight: bold; } /* Made footer bold */
+.footer { padding: 2cm; padding-top: 0; font-size: 14pt; font-weight: bold; }
 .footer p { margin: 5px 0; }
-/* Responsive Design */
+
+/* --- RESPONSIVE DESIGN FIXES --- */
 @media (max-width: 1024px) {
     .app-container { flex-direction: column; }
     .form-panel { flex: 0 0 auto; }
     .preview-panel { padding: 40px 20px; align-items: flex-start; }
-    #cover-page { transform: scale(0.8); transform-origin: top center; }
+    #cover-page {
+        transform: scale(0.8);
+        transform-origin: top center;
+        margin: 0 auto 40px auto; /* Removed negative margin */
+    }
 }
 @media (max-width: 768px) {
-    #cover-page { transform: scale(0.65); margin-top: -8cm; }
+    #cover-page {
+        transform: scale(0.65);
+        transform-origin: top center;
+        margin: 20px auto; /* Removed negative margin */
+    }
 }
 @media (max-width: 480px) {
     .form-panel { padding: 30px 20px; }
-    #cover-page { transform: scale(0.45); margin-top: -15cm; }
+    #cover-page {
+        transform: scale(0.5); /* Adjusted scale for small devices */
+        transform-origin: top center;
+        margin: 20px auto; /* Removed negative margin */
+    }
 }
