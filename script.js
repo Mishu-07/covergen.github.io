@@ -216,11 +216,17 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePreview(); 
             saveData();
 
-            // --- JPG RESOLUTION FIX ---
-            html2canvas(elements.coverPage, {
-                scale: 3, // Increased scale for high resolution (approx. 300 DPI)
+            const coverPage = elements.coverPage;
+            // Temporarily add a class to override responsive scaling
+            coverPage.classList.add('capture-mode');
+
+            html2canvas(coverPage, {
+                scale: 3, // Use scale for high resolution
                 useCORS: true
             }).then(canvas => {
+                // IMPORTANT: Remove the class after the screenshot is taken
+                coverPage.classList.remove('capture-mode');
+
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
                 
